@@ -7,13 +7,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.RecordInterceptor;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 
+@Log4j2
 @RequiredArgsConstructor
 @Configuration
 public class StrConsumerConfig {
@@ -39,5 +42,26 @@ public class StrConsumerConfig {
 
         return factory;
 
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> validMessageContainerFactory(
+        ConsumerFactory<String, String> consumerFactory
+    ){
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setRecordInterceptor(valideMessage());
+        return factory;
+
+    }
+
+    private RecordInterceptor<String, String> valideMessage() {
+       return record -> {
+        if(record.value().contains("Teste")){
+            log.info("Possui a palavra teste");
+            return record;
+        }
+        return record;
+       };
     }
 }
